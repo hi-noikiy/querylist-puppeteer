@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jaeger <JaegerCode@gmail.com>
@@ -7,7 +8,6 @@
  */
 
 namespace QL\Ext;
-
 
 use Nesk\Rialto\Data\JsFunction;
 use QL\Contracts\PluginContract;
@@ -20,21 +20,21 @@ class Chrome implements PluginContract
     public static function install(QueryList $queryList, ...$opt)
     {
         $name = $opt[0] ?? 'chrome';
-        $queryList->bind($name,function ($url,$options = []) {
-            return Chrome::render($this,$url,$options);
+        $queryList->bind($name, function ($url, $options = [], $puppeteerOptions = []) {
+            return Chrome::render($this, $url, $options, $puppeteerOptions);
         });
     }
 
-    public static function render(QueryList $queryList,$url,$options)
+    public static function render(QueryList $queryList, $url, $options, $puppeteerOptions)
     {
         $options = self::mergeOptions($options);
-        $puppeteer = new Puppeteer;
+        $puppeteer = new Puppeteer($puppeteerOptions);
         $browser = $puppeteer->launch($options);
         $page = $browser->newPage();
 
-        if($url instanceof Closure){
-            $html = $url($page,$browser);
-        }else{
+        if ($url instanceof Closure) {
+            $html = $url($page, $browser);
+        } else {
             $page->setRequestInterception(true);
             $page->on('request',
                 JsFunction::createWithParameters(['request'])
@@ -57,6 +57,6 @@ class Chrome implements PluginContract
         $defalutOptions = [
             'ignoreHTTPSErrors' => true,
         ];
-        return array_merge($defalutOptions,$option);
+        return array_merge($defalutOptions, $option);
     }
 }
